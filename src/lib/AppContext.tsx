@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { DB } from '../types'
-import { emptyDB, loadDB, saveDB } from './db.ts'
+import type { DB, Family, Profile } from '../types'
+import { emptyDB, loadDB, saveDB, uid, hashPassword, loadLocalUsers, saveLocalUsers } from './db.ts'
 import { api, getToken, setToken } from './api'
 import type { MarketplaceTutor } from './api'
 
@@ -91,25 +91,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cloud])
 
-  const applyAuth = (state: unknown, marketplace: MarketplaceTutor[]) => {
-    const merged = mergeMarketplace(normalizeState(state), marketplace)
-    const parent = merged.profiles.find((p) => p.role === 'parent')
-    merged.currentUserId = parent ? parent.id : merged.profiles[0]?.id ?? null
-    saveDB(merged)
-    setDb(merged)
-    setCloud(true)
-  }
-
   const register = async (name: string, email: string, password: string) => {
-    const res = await api.register(name, email, password)
-    setToken(res.token)
-    applyAuth(res.state, res.marketplace)
+    const key = email.toLowerCase()
+    const users = loadLocalUsers()
+    if (users[key]) throw new Error('An account with this email already exists on this device.')
+
+    const id = uid()
+    const familyId = uid()
+    const profile: Profile = { id, name, email: key, role: 'parent', familyId, avatar: '', createdAt: Date.now() }
+    const family: Family = {
+      id: familyId,
+      name: `${name}'s family`,
+      parentId: id,
+      memberIds: [id],
+      consent: null,
+      balance: 0,
+      goalName: 'New goal',
+      goalTarget: 0,
+      goalSaved: 0,
+    }
+
+    const next = loadDB()
+    next.profiles.push(profile)
+    next.families.push(family)
+    next.currentUserId = id
+    saveDB(next)
+
+    users[key] = { passwordHash: hashPassword(password, key), profileId: id }
+    saveLocalUsers(users)
+
+    setDb(next)
+    setCloud(false)
   }
 
   const login = async (email: string, password: string) => {
-    const res = await api.login(email, password)
-    setToken(res.token)
-    applyAuth(res.state, res.marketplace)
+    const key = email.toLowerCase()
+    const rec = loadLocalUsers()[key]
+    if (!rec || rec.passwordHash !== hashPassword(password, key)) {
+      throw new Error('Email or password is incorrect.')
+    }
+    const next = loadDB()
+    const profile = next.profiles.find((p) => p.id === rec.profileId)
+    if (!profile) throw new Error('Account not found on this device.')
+    next.currentUserId = profile.id
+    saveDB(next)
+    setDb(next)
+    setCloud(false)
   }
 
   const logout = () => {
@@ -122,8 +149,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const eraseAccount = async () => {
-    if (cloud) {
-      try { await api.erase() } catch { /* offline */ }
+    const current = dbRef.current.profiles.find((p) => p.id === dbRef.current.currentUserId)
+    if (current?.email) {
+      const users = loadLocalUsers()
+      delete users[current.email.toLowerCase()]
+      saveLocalUsers(users)
     }
     setToken(null)
     const next = emptyDB()

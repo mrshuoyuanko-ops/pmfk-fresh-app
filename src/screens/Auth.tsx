@@ -39,7 +39,7 @@ export function Auth() {
   }
 
   const oauth = (provider: string) => {
-    setNote(`${provider} OAuth (Google / Apple / Microsoft) is wired on the server and ready to connect. Email sign-in is fully working now.`)
+    setNote(`${provider} sign-in needs the cloud backend (coming soon). Email sign-in works fully offline right now — no server needed.`)
   }
 
   return (
@@ -59,7 +59,7 @@ export function Auth() {
         <div className="auth-form">
           <span className="eyebrow">WELCOME</span>
           <h2>Start your family space</h2>
-          <p className="muted">One account, synced to the cloud. Switch between parent, tutor, and learner anytime.</p>
+          <p className="muted">One account, kept safely on this device. Switch between parent, tutor, and learner anytime.</p>
 
           <label className="field">
             Your name

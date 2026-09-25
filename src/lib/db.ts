@@ -38,3 +38,35 @@ export function loadDB(): DB {
 export function saveDB(db: DB): void {
   localStorage.setItem(KEY, JSON.stringify(db))
 }
+
+// ---- Local (offline-first) account credentials ----
+const AUTH_KEY = 'pmfk-local-auth'
+
+export interface LocalUser {
+  passwordHash: string
+  profileId: string
+}
+
+export function hashPassword(pw: string, salt = ''): string {
+  // FNV-1a hash for on-device accounts. This is local obfuscation only:
+  // the data lives in this browser's localStorage, not on any server.
+  const s = `${salt}:${pw}`
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return 'p' + (h >>> 0).toString(16)
+}
+
+export function loadLocalUsers(): Record<string, LocalUser> {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_KEY) || '{}') as Record<string, LocalUser>
+  } catch {
+    return {}
+  }
+}
+
+export function saveLocalUsers(users: Record<string, LocalUser>): void {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(users))
+}
