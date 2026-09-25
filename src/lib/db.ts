@@ -47,10 +47,18 @@ export interface LocalUser {
   profileId: string
 }
 
-export function hashPassword(pw: string, salt = ''): string {
-  // FNV-1a hash for on-device accounts. This is local obfuscation only:
-  // the data lives in this browser's localStorage, not on any server.
+export async function hashPassword(pw: string, salt = ''): Promise<string> {
   const s = `${salt}:${pw}`
+  try {
+    if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
+      return 's' + Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('')
+    }
+  } catch {
+    /* fall through to the sync fallback below */
+  }
+  // FNV-1a fallback for non-secure contexts (e.g. file://). The hash only ever
+  // lives in this browser's localStorage — it never leaves the device.
   let h = 2166136261
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i)

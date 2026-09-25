@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../lib/AppContext'
+import { checkEmail } from '../lib/email'
 
 export function Auth() {
   const { register, login, syncing } = useApp()
@@ -9,15 +10,17 @@ export function Auth() {
   const [error, setError] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const emailCheck = checkEmail(email)
 
   const create = async () => {
     if (!name.trim()) { setError('Please enter your name.'); return }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Enter a valid email address.'); return }
+    const check = checkEmail(email)
+    if (!check.valid) { setError(check.label); return }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setError('')
     setBusy(true)
     try {
-      await register(name.trim(), email.trim().toLowerCase(), password)
+      await register(name.trim(), email.trim(), password)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create the account.')
     } finally {
@@ -68,6 +71,9 @@ export function Auth() {
           <label className="field">
             Email
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" autoComplete="email" />
+            {email.trim() && (
+              <small className="email-status" style={{ color: emailCheck.tone === 'error' ? '#d9534f' : emailCheck.tone === 'warn' ? '#b8860b' : '#2e9e5b' }}>{emailCheck.label}</small>
+            )}
           </label>
           <label className="field">
             Password

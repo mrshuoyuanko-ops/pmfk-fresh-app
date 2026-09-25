@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { DB, Family, Profile } from '../types'
 import { emptyDB, loadDB, saveDB, uid, hashPassword, loadLocalUsers, saveLocalUsers } from './db.ts'
+import { normalizeEmail, isValidEmail, isDisposableEmail } from './email.ts'
 import { api, getToken, setToken } from './api'
 import type { MarketplaceTutor } from './api'
 
@@ -92,7 +93,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [cloud])
 
   const register = async (name: string, email: string, password: string) => {
-    const key = email.toLowerCase()
+    const key = normalizeEmail(email)
+    if (!isValidEmail(key)) throw new Error('Please enter a valid email address.')
+    if (isDisposableEmail(key)) throw new Error('Temporary email addresses are not allowed. Use a real email.')
     const users = loadLocalUsers()
     if (users[key]) throw new Error('An account with this email already exists on this device.')
 
@@ -117,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     next.currentUserId = id
     saveDB(next)
 
-    users[key] = { passwordHash: hashPassword(password, key), profileId: id }
+    users[key] = { passwordHash: await hashPassword(password, key), profileId: id }
     saveLocalUsers(users)
 
     setDb(next)
@@ -125,9 +128,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
-    const key = email.toLowerCase()
+    const key = normalizeEmail(email)
     const rec = loadLocalUsers()[key]
-    if (!rec || rec.passwordHash !== hashPassword(password, key)) {
+    if (!rec || rec.passwordHash !== await hashPassword(password, key)) {
       throw new Error('Email or password is incorrect.')
     }
     const next = loadDB()
