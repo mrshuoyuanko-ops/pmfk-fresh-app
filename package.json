@@ -1,7 +1,9 @@
 {
   "name": "pocket-money-for-kids--pmfk-",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Pocket Money For Kids (PMFK) - privacy-first family money and tutoring app",
+  "author": "Shawn Kong",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
