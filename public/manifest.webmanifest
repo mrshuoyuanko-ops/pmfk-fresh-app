@@ -1,0 +1,33 @@
+{
+  "name": "Pocket Money For Kids (PMFK)",
+  "short_name": "PMFK",
+  "description": "Learn, earn, and grow. A private, offline-first pocket money and tutoring app for families.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f8f2",
+  "theme_color": "#1e5249",
+  "categories": ["education", "finance", "kids"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

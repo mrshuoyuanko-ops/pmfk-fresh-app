@@ -1,0 +1,10 @@
+# Render Blueprint — deploy PMFK in one click from GitHub
+# https://render.com -> New -> Blueprint -> connect this repo
+
+services:
+  - type: web
+    name: pmfk
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health

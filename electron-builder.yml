@@ -1,0 +1,31 @@
+appId: com.shawnkong.pmfk
+productName: Pocket Money For Kids
+copyright: Made by Shawn Kong
+
+directories:
+  output: release
+
+files:
+  - electron/**/*
+  - public/icons/icon-512.png
+  - package.json
+
+win:
+  target:
+    - nsis
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.education
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Education
+  maintainer: Shawn Kong
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

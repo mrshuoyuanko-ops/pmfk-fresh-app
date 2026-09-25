@@ -1,0 +1,6 @@
+{
+  "appId": "com.shawnkong.pmfk",
+  "appName": "Pocket Money For Kids",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" }
+}
