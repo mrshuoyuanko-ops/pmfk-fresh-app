@@ -73,9 +73,9 @@ export function isDisposableEmail(email: string): boolean {
 export function detectRole(email: string): EmailRole {
   const domain = (email.split('@')[1] || '').toLowerCase()
   if (!domain) return 'parent'
-  const tld = domain.split('.').pop() || ''
 
-  if (SCHOOL_TLDS.has(tld) || SCHOOL_HINTS.some((k) => domain.includes(k))) return 'student'
+  const isSchoolDomain = [...SCHOOL_TLDS].some((suffix) => domain === suffix || domain.endsWith('.' + suffix))
+  if (isSchoolDomain || SCHOOL_HINTS.some((k) => domain.includes(k))) return 'student'
   if (TUTOR_HINTS.some((k) => domain.includes(k))) return 'tutor'
   return 'parent'
 }
