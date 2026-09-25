@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, ChangeEvent as ReactChangeEvent } from 'react'
 import { useApp } from '../lib/AppContext'
-import { api, API_BASE } from '../lib/api'
+import { API_BASE } from '../lib/api'
 import { initials, avatarTone } from '../lib/format'
 
 interface Peer { id: string; name: string }
@@ -99,11 +99,15 @@ export function Meeting() {
   function connect(roomCode: string, host: boolean) {
     hostRef.current = host
     setError('')
+    setInRoom(true)
+    setCode(roomCode)
+    if (!navigator.onLine) {
+      setError('Offline mode — live video needs the cloud backend. The whiteboard and notes still work.')
+      return
+    }
     const ws = new WebSocket(`${wsUrl()}?room=${roomCode}&id=${peerIdRef.current}&user=${encodeURIComponent(user?.name || 'Guest')}`)
     wsRef.current = ws
     ws.onopen = async () => {
-      setInRoom(true)
-      setCode(roomCode)
       try {
         const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         streamRef.current = s
@@ -138,7 +142,8 @@ export function Meeting() {
         setFiles((f) => [...f, { name: m.name!, from: m.from || 'Peer', dataUrl: m.dataUrl || '' }])
       }
     }
-    ws.onclose = () => { setError('Disconnected from the room.') }
+    ws.onclose = () => { setError('Live connection ended — the whiteboard and notes still work locally.') }
+    ws.onerror = () => { setError('Live video needs the cloud backend — the whiteboard and notes still work offline.') }
   }
 
   useEffect(() => () => {
@@ -166,14 +171,10 @@ export function Meeting() {
 
   if (!user) return null
 
-  const createRoom = async () => {
-    try {
-      const res = await api.rooms()
-      location.hash = `#/meeting/${res.code}`
-      connect(res.code, true)
-    } catch {
-      setError('Could not create a room. Is the server running?')
-    }
+  const createRoom = () => {
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase()
+    location.hash = `#/meeting/${code}`
+    connect(code, true)
   }
   const joinRoom = () => {
     const c = joinInput.trim().toUpperCase()
@@ -219,6 +220,9 @@ export function Meeting() {
     const t = draft.trim()
     if (!t) return
     send({ type: 'chat', text: t })
+    if (!wsRef.current || wsRef.current.readyState !== 1) {
+      setChat((c) => [...c, { name: user?.name || 'You', text: t }])
+    }
     setDraft('')
   }
 
