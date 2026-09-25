@@ -31,7 +31,7 @@ jobs:
           node -e "const fs=require('fs'); fs.writeFileSync('electron/config.json', JSON.stringify({url: process.env.PMFK_URL}, null, 2) + '\\n')"
         env:
           PMFK_URL: ${{ vars.PMFK_URL || 'https://pmfk.onrender.com' }}
-      - run: npx electron-builder ${{ matrix.args }}
+      - run: npx electron-builder ${{ matrix.args }} --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: pmfk-${{ matrix.name }}
