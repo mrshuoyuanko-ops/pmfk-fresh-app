@@ -63,7 +63,7 @@ export function Auth() {
 
           <label className="field">
             Your name
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Shawn Kong" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alex" />
           </label>
           <label className="field">
             Email
